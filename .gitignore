@@ -9,3 +9,7 @@ token.json
 # Python cache
 __pycache__/
 *.pyc
+
+# Runtime files created by the agent
+data/classify_cache.json
+data/sender_history.json

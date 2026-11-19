@@ -1,0 +1,130 @@
+[
+  {
+    "id": "m01",
+    "from": "deals@shopmax-store.com",
+    "subject": "מבצע ענק! 50% הנחה על כל החנות",
+    "category": "promotion",
+    "action": "spam",
+    "decided_by": "agent"
+  },
+  {
+    "id": "m02",
+    "from": "alert@secure-bank-verify.net",
+    "subject": "החשבון שלך ייחסם תוך 24 שעות",
+    "category": "phishing",
+    "action": "spam",
+    "decided_by": "agent"
+  },
+  {
+    "id": "m03",
+    "from": "security-noreply@g00gle-accounts.com",
+    "subject": "התראת אבטחה: התחברות חשודה לחשבון שלך",
+    "category": "phishing",
+    "action": "spam",
+    "decided_by": "agent"
+  },
+  {
+    "id": "m04",
+    "from": "no-reply@accounts.google.com",
+    "subject": "התראת אבטחה: התחברות חדשה ממכשיר Windows",
+    "category": "security_alert",
+    "action": "keep",
+    "decided_by": "agent"
+  },
+  {
+    "id": "m05",
+    "from": "orders@booknook-shop.com",
+    "subject": "קבלה על הזמנה מספר 48213",
+    "category": "receipt",
+    "action": "keep",
+    "decided_by": "agent"
+  },
+  {
+    "id": "m06",
+    "from": "billing@techzone-store.com",
+    "subject": "קבלה על רכישת אוזניות",
+    "category": "receipt",
+    "action": "archive",
+    "decided_by": "agent"
+  },
+  {
+    "id": "m07",
+    "from": "no-reply@learnhub-courses.com",
+    "subject": "קוד האימות שלך: 482913",
+    "category": "otp",
+    "action": "keep",
+    "decided_by": "agent"
+  },
+  {
+    "id": "m08",
+    "from": "verify@payfast-wallet.com",
+    "subject": "קוד חד-פעמי לכניסה",
+    "category": "otp",
+    "action": "archive",
+    "decided_by": "agent"
+  },
+  {
+    "id": "m09",
+    "from": "calendar-notification@google.com",
+    "subject": "הזמנה: פגישת צוות פרויקט - יום שלישי 24.11 בשעה 10:00",
+    "category": "calendar",
+    "action": "keep",
+    "decided_by": "agent"
+  },
+  {
+    "id": "m10",
+    "from": "notifications@connectly-social.com",
+    "subject": "3 אנשים אהבו את הפוסט שלך",
+    "category": "social",
+    "action": "archive",
+    "decided_by": "agent"
+  },
+  {
+    "id": "m11",
+    "from": "updates@clouddrive-app.com",
+    "subject": "עדכון בתנאי השימוש שלנו",
+    "category": "service_update",
+    "action": "archive",
+    "decided_by": "agent"
+  },
+  {
+    "id": "m12",
+    "from": "noa.levi.home@gmail.com",
+    "subject": "מחר בערב?",
+    "category": "personal",
+    "action": "keep",
+    "decided_by": "agent"
+  },
+  {
+    "id": "m13",
+    "from": "python-learners@googlegroups.com",
+    "subject": "[python-learners] שאלה על לולאות בתוך פונקציה",
+    "category": "google_group",
+    "action": "keep",
+    "decided_by": "agent"
+  },
+  {
+    "id": "m14",
+    "from": "newsletter@weeklycodetips.com",
+    "subject": "הגיליון השבועי: 5 טיפים לעבודה עם גיט",
+    "category": "newsletter",
+    "action": "archive",
+    "decided_by": "agent"
+  },
+  {
+    "id": "m15",
+    "from": "dani.c.1987@gmail.com",
+    "subject": "לגבי האופניים שפרסמת",
+    "category": "personal",
+    "action": "archive",
+    "decided_by": "user"
+  },
+  {
+    "id": "m16",
+    "from": "yael.m.work@outlook.com",
+    "subject": "בקשה קטנה",
+    "category": "personal",
+    "action": "trash",
+    "decided_by": "user"
+  }
+]
