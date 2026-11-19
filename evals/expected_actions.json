@@ -1,0 +1,21 @@
+{
+  "reference_date": "2026-11-19T23:00:00",
+  "expected": {
+    "m01": {"category": "promotion",       "action": "spam",    "note": "פרסומת"},
+    "m02": {"category": "phishing",        "action": "spam",    "note": "הונאה: בקשה להזין פרטי כרטיס"},
+    "m03": {"category": "phishing",        "action": "spam",    "note": "מקרה קשה: הונאה שמתחפשת להתראת אבטחה (הדומיין מזויף)"},
+    "m04": {"category": "security_alert",  "action": "keep",    "note": "מקרה קשה: התראת אבטחה אמיתית"},
+    "m05": {"category": "receipt",         "action": "keep",    "note": "קבלה מלפני פחות מחודש"},
+    "m06": {"category": "receipt",         "action": "archive", "note": "קבלה מלפני יותר מחודש"},
+    "m07": {"category": "otp",             "action": "keep",    "note": "קוד אימות שעדיין בתוקף"},
+    "m08": {"category": "otp",             "action": "archive", "note": "קוד אימות שפג תוקפו"},
+    "m09": {"category": "calendar",        "action": "keep",    "note": "פגישה עתידית"},
+    "m10": {"category": "social",          "action": "archive", "note": "התראה מרשת חברתית"},
+    "m11": {"category": "service_update",  "action": "archive", "note": "עדכון שירות"},
+    "m12": {"category": "personal_known",  "action": "keep",    "note": "מייל אישי מאדם מוכר"},
+    "m13": {"category": "google_group",    "action": "keep",    "note": "קבוצת גוגל"},
+    "m14": {"category": "newsletter",      "action": "archive", "note": "ניוזלטר"},
+    "m15": {"category": "unknown_sender",  "action": "ask",     "note": "שולח לא מוכר"},
+    "m16": {"category": "unknown_sender",  "action": "ask",     "note": "שולח לא מוכר, בקשה אישית"}
+  }
+}
