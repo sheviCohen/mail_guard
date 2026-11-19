@@ -1,4 +1,5 @@
-"""Upload the 16 fake mails + their correct answers to LangSmith as a dataset (one time).
+"""Upload the fake mails + their correct answers to LangSmith as a dataset.
+Safe to run again: only mails that are not in the dataset yet are added.
 Run from the project folder:  python evals/create_dataset.py
 """
 import truststore
@@ -23,22 +24,29 @@ def main():
 
     client = Client()
     if client.has_dataset(dataset_name=DATASET_NAME):
-        print(f"הדאטהסט '{DATASET_NAME}' כבר קיים. לא יוצר שוב.")
-        sys.exit(0)
-
-    dataset = client.create_dataset(
-        DATASET_NAME, description="16 fake emails with the expected category and action")
+        dataset = client.read_dataset(dataset_name=DATASET_NAME)
+        # already uploaded mails (by id) are skipped, so running this again only adds new mails
+        existing = {ex.inputs["mail"]["id"] for ex in client.list_examples(dataset_id=dataset.id)}
+    else:
+        dataset = client.create_dataset(
+            DATASET_NAME, description="Fake emails with the expected category and action")
+        existing = set()
 
     examples = []
     for mail in mails:
+        if mail["id"] in existing:
+            continue
         expected = truth["expected"][mail["id"]]
         examples.append({
             "inputs": {"mail": mail, "today": truth["reference_date"]},
             "outputs": {"category": expected["category"], "action": expected["action"]},
             "metadata": {"note": expected["note"]},
         })
+    if not examples:
+        print(f"אין מיילים חדשים. בדאטהסט '{DATASET_NAME}' יש כבר {len(existing)} דוגמאות.")
+        sys.exit(0)
     client.create_examples(dataset_id=dataset.id, examples=examples)
-    print(f"נוצר הדאטהסט '{DATASET_NAME}' עם {len(examples)} דוגמאות.")
+    print(f"נוספו {len(examples)} דוגמאות. סך הכל בדאטהסט: {len(existing) + len(examples)}.")
 
 
 if __name__ == "__main__":

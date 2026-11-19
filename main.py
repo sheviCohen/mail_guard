@@ -11,7 +11,7 @@ from langgraph.types import Command
 from src.graph import build_graph
 
 TODAY = "2026-11-19T23:00:00"     # fixed "now", the same date the expected answers were written for
-PROMPT_VERSION = "v1"
+PROMPT_VERSION = "v2"                 # the improved prompt (won the before/after experiment)
 
 
 def ask_user(question: dict) -> str:
