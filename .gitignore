@@ -13,6 +13,7 @@ __pycache__/
 # Runtime files created by the agent
 data/classify_cache.json
 data/sender_history.json
+data/results_gmail.json
 
 # LangGraph Studio (local server data, created by "langgraph dev")
 .langgraph_api/

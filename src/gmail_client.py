@@ -5,6 +5,8 @@ Safety rules (decided at the start of the project):
 - Permission scope `gmail.modify`: can move mails and send them to the trash, but can NOT delete forever.
 - DRY RUN by default: the agent only reports what it WOULD do. To really move mails,
   set MAIL_GUARD_DRY_RUN=false in the .env file.
+- Every mail the agent handles gets a decision label (for example "סוכן/ספאם"), also in dry run,
+  so the decision can be seen on the mail itself in Gmail. A label never moves or deletes a mail.
 Setup guide: docs/gmail_setup.md
 """
 import base64
@@ -27,8 +29,18 @@ LABEL_CHANGES = {
     "spam": {"addLabelIds": ["SPAM"], "removeLabelIds": ["INBOX"]},
 }
 
+# the label that shows the agent's decision on the mail itself (nested under one parent label)
+DECISION_PARENT = "סוכן"
+DECISION_LABELS = {
+    "keep": "סוכן/להשאיר",
+    "archive": "סוכן/ארכיון",
+    "spam": "סוכן/ספאם",
+    "trash": "סוכן/פח",
+    "ask": "סוכן/שאלה",
+}
+
 _service = None
-_label_id = None
+_label_ids = {}        # label name -> label id, filled once per run
 
 
 def is_dry_run() -> bool:
@@ -66,22 +78,29 @@ def get_service():
     return _service
 
 
-def get_label_id() -> str:
-    """The id of the agent-test label. Creates the label if it does not exist yet."""
-    global _label_id
-    if _label_id:
-        return _label_id
-    service = get_service()
-    for label in service.users().labels().list(userId="me").execute().get("labels", []):
-        if label["name"] == LABEL_NAME:
-            _label_id = label["id"]
-            return _label_id
-    created = service.users().labels().create(
-        userId="me",
-        body={"name": LABEL_NAME, "labelListVisibility": "labelShow", "messageListVisibility": "show"},
+def get_label_id(name: str = LABEL_NAME) -> str:
+    """The id of a label by its name. Creates the label if it does not exist yet."""
+    if not _label_ids:
+        for label in get_service().users().labels().list(userId="me").execute().get("labels", []):
+            _label_ids[label["name"]] = label["id"]
+    if name not in _label_ids:
+        created = get_service().users().labels().create(
+            userId="me",
+            body={"name": name, "labelListVisibility": "labelShow", "messageListVisibility": "show"},
+        ).execute()
+        _label_ids[name] = created["id"]
+    return _label_ids[name]
+
+
+def mark_decision(message_id: str, action: str) -> None:
+    """Put the decision label on the mail, and remove an older decision label from a previous run."""
+    get_label_id(DECISION_PARENT)                       # the parent first, so Gmail shows the labels nested
+    new_label = get_label_id(DECISION_LABELS[action])
+    old_labels = [_label_ids[n] for n in DECISION_LABELS.values() if n in _label_ids and _label_ids[n] != new_label]
+    get_service().users().messages().modify(
+        userId="me", id=message_id,
+        body={"addLabelIds": [new_label], "removeLabelIds": old_labels},
     ).execute()
-    _label_id = created["id"]
-    return _label_id
 
 
 # ---------- filling the inbox with fake mails ----------
@@ -165,9 +184,9 @@ def fetch_emails(max_results: int = 50) -> list[dict]:
 # ---------- acting ----------
 
 def apply_action(message_id: str, action: str) -> str:
-    """Move one mail according to the decision. Returns a short Hebrew description of what happened."""
-    if action in ("keep", "ask"):
-        return "נשאר בתיבה"
+    """Label the mail with the decision, then move it. Returns a short Hebrew description of what happened."""
+    if action not in DECISION_LABELS:
+        raise ValueError(f"פעולה לא מוכרת: {action}")
 
     service = get_service()
     msg = service.users().messages().get(userId="me", id=message_id, format="minimal").execute()
@@ -175,12 +194,15 @@ def apply_action(message_id: str, action: str) -> str:
         # the safety fence: never touch a mail without the test label, whatever the agent decided
         raise PermissionError("סירוב: למייל אין את התווית agent-test")
 
+    mark_decision(message_id, action)          # also in dry run: a label only marks, it moves nothing
+    label = DECISION_LABELS[action]
+
+    if action in ("keep", "ask"):
+        return f"נשאר בתיבה, סומן {label}"
     if is_dry_run():
-        return f"מצב בדיקה: היה מבצע {action}"
+        return f"מצב בדיקה: סומן {label}, לא הוזז"
     if action == "trash":
         service.users().messages().trash(userId="me", id=message_id).execute()   # recoverable for 30 days
-    elif action in LABEL_CHANGES:
-        service.users().messages().modify(userId="me", id=message_id, body=LABEL_CHANGES[action]).execute()
     else:
-        raise ValueError(f"פעולה לא מוכרת: {action}")
-    return f"בוצע: {action}"
+        service.users().messages().modify(userId="me", id=message_id, body=LABEL_CHANGES[action]).execute()
+    return f"בוצע: {action}, סומן {label}"

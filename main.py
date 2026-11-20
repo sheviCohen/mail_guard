@@ -10,6 +10,7 @@ load_dotenv()
 from langgraph.types import Command
 
 from src.graph import build_graph
+from src.nodes import results_file
 
 TODAY = "2026-11-19T23:00:00"     # fixed "now", the same date the expected answers were written for
 PROMPT_VERSION = "v2"                 # the improved prompt (won the before/after experiment)
@@ -35,7 +36,7 @@ def ask_user(question: dict) -> str:
     return input("   > ").strip()
 
 
-def print_results(results: list[dict]) -> None:
+def print_results(results: list[dict], file_name: str) -> None:
     print("\n" + "=" * 60)
     print(f"{'id':<5}{'action':<9}{'by':<7}{'category':<16}subject")
     print("-" * 60)
@@ -43,7 +44,7 @@ def print_results(results: list[dict]) -> None:
         print(f"{r['id'][:4]:<5}{r['action']:<9}{r['decided_by']:<7}{r['category']:<16}{r['subject'][:40]}")
         if r.get("applied") and r["applied"] != "נרשם":
             print(f"     ↳ {r['applied']}")            # Gmail: what was really done (or would be, in dry run)
-    print(f"\nנשמר גם בקובץ data/results.json  ({len(results)} מיילים)")
+    print(f"\nנשמר גם בקובץ data/{file_name}  ({len(results)} מיילים)")
 
 
 def main():
@@ -71,7 +72,7 @@ def main():
         answer = ask_user(state["__interrupt__"][0].value)
         state = graph.invoke(Command(resume=answer), config)
 
-    print_results(state["results"])
+    print_results(state["results"], results_file(inputs["source"]))
 
 
 if __name__ == "__main__":

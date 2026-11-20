@@ -227,8 +227,13 @@ def apply_action(state: MailState) -> dict:
     return {"results": state["results"] + [row]}
 
 
+def results_file(source: str) -> str:
+    """Real Gmail results go to their own file (not in git: real subjects), so the example file stays intact."""
+    return "results_gmail.json" if source == "gmail" else "results.json"
+
+
 def finish(state: MailState) -> dict:
-    write_json("results.json", state["results"])
+    write_json(results_file(state.get("source")), state["results"])
     return {}
 
 
