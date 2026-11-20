@@ -5,7 +5,8 @@ from src import nodes
 from src.state import MailState
 
 
-def build_graph():
+def build_graph(with_checkpointer: bool = True):
+    """with_checkpointer=False is for LangGraph Studio, which brings its own checkpointer."""
     g = StateGraph(MailState)
 
     for name in ["load_emails", "pick_next", "apply_sender_rule", "classify", "decide_action",
@@ -14,7 +15,6 @@ def build_graph():
 
     # fixed edges
     g.add_edge(START, "load_emails")
-    g.add_edge("load_emails", "pick_next")
     g.add_edge("classify", "decide_action")
     g.add_edge("ask_human", "record_decision")
     g.add_edge("apply_sender_rule", "apply_action")
@@ -22,10 +22,13 @@ def build_graph():
     g.add_edge("finish", END)
 
     # conditional edges (branches + the loop)
+    g.add_conditional_edges("load_emails", nodes.route_after_load, ["pick_next", "finish"])
     g.add_conditional_edges("pick_next", nodes.route_after_pick, ["apply_sender_rule", "classify"])
     g.add_conditional_edges("decide_action", nodes.route_after_decide, ["ask_human", "apply_action"])
     g.add_conditional_edges("record_decision", nodes.route_after_record, ["propose_rule", "apply_action"])
     g.add_conditional_edges("apply_action", nodes.route_after_apply, ["pick_next", "finish"])
 
     # the checkpointer saves the state, so the graph can stop (interrupt) and continue later
-    return g.compile(checkpointer=InMemorySaver())
+    if with_checkpointer:
+        return g.compile(checkpointer=InMemorySaver())
+    return g.compile()

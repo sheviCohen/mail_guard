@@ -1,0 +1,7 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "mail_guard": "./src/studio.py:graph"
+  },
+  "env": ".env"
+}

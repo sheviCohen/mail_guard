@@ -1,6 +1,7 @@
 import truststore
 truststore.inject_into_ssl()      # must run first: lets Python trust the Windows certificates (NetFree filter)
 
+import argparse
 import uuid
 
 from dotenv import load_dotenv
@@ -39,15 +40,31 @@ def print_results(results: list[dict]) -> None:
     print(f"{'id':<5}{'action':<9}{'by':<7}{'category':<16}subject")
     print("-" * 60)
     for r in results:
-        print(f"{r['id']:<5}{r['action']:<9}{r['decided_by']:<7}{r['category']:<16}{r['subject'][:40]}")
+        print(f"{r['id'][:4]:<5}{r['action']:<9}{r['decided_by']:<7}{r['category']:<16}{r['subject'][:40]}")
+        if r.get("applied") and r["applied"] != "נרשם":
+            print(f"     ↳ {r['applied']}")            # Gmail: what was really done (or would be, in dry run)
     print(f"\nנשמר גם בקובץ data/results.json  ({len(results)} מיילים)")
 
 
 def main():
+    parser = argparse.ArgumentParser(description="mail_guard - sorts a mailbox")
+    parser.add_argument("--gmail", action="store_true",
+                        help="work on real Gmail (only mails labelled agent-test) instead of the fake mailbox")
+    args = parser.parse_args()
+
+    if args.gmail:
+        from src.gmail_client import is_dry_run
+        print("📬 ג'ימייל אמיתי, רק מיילים עם התווית agent-test.")
+        if is_dry_run():
+            print("🧪 מצב בדיקה: הסוכן רק מדווח מה היה עושה, ולא מזיז אף מייל.")
+        inputs = {"source": "gmail", "prompt_version": PROMPT_VERSION}       # "today" = the real date
+    else:
+        inputs = {"source": "fake", "today": TODAY, "prompt_version": PROMPT_VERSION}
+
     graph = build_graph()
     config = {"configurable": {"thread_id": str(uuid.uuid4())}, "recursion_limit": 500}
 
-    state = graph.invoke({"today": TODAY, "prompt_version": PROMPT_VERSION}, config)
+    state = graph.invoke(inputs, config)
 
     # every time the graph stops to ask, show the question and resume with the answer
     while "__interrupt__" in state:

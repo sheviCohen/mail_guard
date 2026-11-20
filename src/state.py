@@ -6,6 +6,7 @@ class MailState(TypedDict, total=False):
     emails: list[dict]          # mails still waiting to be handled
     today: str                  # fixed "now" (ISO), so date rules are reproducible
     prompt_version: str         # "v1" (before) or "v2" (after)
+    source: str                 # "fake" (the fake mailbox) or "gmail" (real Gmail, label agent-test only)
 
     # --- the mail being handled right now ---
     current: Optional[dict]

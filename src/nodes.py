@@ -14,7 +14,9 @@ from src.state import MailState
 DATA = Path(__file__).resolve().parent.parent / "data"
 MODEL_NAME = "gemini-3.5-flash-lite"     # free tier: 500 requests/day, 15/minute
 MAX_REQUESTS_PER_SECOND = 0.2            # 12 per minute, safely under the 15/minute limit
-RULE_THRESHOLD = 3          # identical user decisions before offering a permanent rule
+DEFAULT_TODAY = "2026-11-19T23:00:00"    # fixed "now" for the fake mailbox (matches the expected answers)
+DEFAULT_PROMPT_VERSION = "v2"            # the version that won the before/after experiment
+RULE_THRESHOLD = 3         # identical user decisions before offering a permanent rule
 USER_CHOICES = ["spam", "trash", "keep", "archive"]
 
 
@@ -107,7 +109,19 @@ def decide(category: str, mail: dict, today: str,
 # ---------- graph nodes ----------
 
 def load_emails(state: MailState) -> dict:
-    return {"emails": read_json("fake_emails.json", []), "results": []}
+    """Fill the queue: from the fake mailbox (default), or from real Gmail (only mails labelled agent-test)."""
+    source = state.get("source") or "fake"
+    if source == "gmail":
+        from src import gmail_client          # imported only when needed, so the fake mode works without Google libs
+        emails = gmail_client.fetch_emails()
+        today = state.get("today") or datetime.now().isoformat(timespec="seconds")   # real mail -> real "now"
+    else:
+        emails = read_json("fake_emails.json", [])
+        today = state.get("today") or DEFAULT_TODAY
+    return {
+        "emails": emails, "results": [], "today": today, "source": source,
+        "prompt_version": state.get("prompt_version") or DEFAULT_PROMPT_VERSION,
+    }
 
 
 def pick_next(state: MailState) -> dict:
@@ -196,11 +210,19 @@ def propose_rule(state: MailState) -> dict:
 
 
 def apply_action(state: MailState) -> dict:
-    """In the fake mailbox, 'applying' = recording the decision. With Gmail this will move the mail."""
+    """Fake mailbox: 'applying' = recording the decision. Gmail: also move the mail (or only report, in dry run)."""
     mail = state["current"]
+    applied = "נרשם"
+    if state.get("source") == "gmail":
+        from src import gmail_client
+        try:
+            applied = gmail_client.apply_action(mail["id"], state["action"])
+        except Exception as error:
+            applied = f"לא בוצע: {error}"      # one failed mail must not stop the whole run
     row = {
         "id": mail["id"], "from": mail["from_email"], "subject": mail["subject"],
         "category": state["category"], "action": state["action"], "decided_by": state["decided_by"],
+        "reason": state.get("reason", ""), "applied": applied,
     }
     return {"results": state["results"] + [row]}
 
@@ -211,6 +233,10 @@ def finish(state: MailState) -> dict:
 
 
 # ---------- routers (conditional edges) ----------
+
+def route_after_load(state: MailState) -> str:
+    return "pick_next" if state["emails"] else "finish"      # an empty inbox -> nothing to do
+
 
 def route_after_pick(state: MailState) -> str:
     rules = read_json("sender_rules.json", {})
